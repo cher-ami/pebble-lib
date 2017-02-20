@@ -1,21 +1,2 @@
-
-# ------------------------------------------------------------------------------ COMPOSER
-
-# Ignore loaded composer modules
-app/vendor/*
-
-# Ignore composer lock installation
-app/composer.lock
-
-
-# ------------------------------------------------------------------------------ POOPS
-
-# Mac poops
+/vendor/
 .DS_Store
-
-# Ignore ide files
-.idea
-
-# Logs
-logs
-*.log
