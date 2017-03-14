@@ -143,7 +143,8 @@ class DatabaseConnector
 	}
 
 	/**
-	 * Initialise base de donnée si elle n'existe pas, et crée la table player
+	 * Init database and create tables from database-schema config.
+	 * Will do nothing if database already exists
 	 */
 	public function initDatabase ()
 	{
@@ -235,8 +236,6 @@ class DatabaseConnector
 
 		// Execute query
 		return $insertStatement->execute($pData);
-
-
 	}
 
 

@@ -96,16 +96,18 @@ trait PebbleApp_mvc
 	 * Returned structure :
 	 * - app -> PebbleApp instance
 	 * - silex -> Silex Application instance
+	 * - view -> Path of the loaded view
 	 * - config -> All loaded configs as associative array, without sensitive data
 	 * - vars -> $pVars argument
 	 * - request -> $request argument
 	 * - exception -> $exception argument
+	 * @param string $pViewName Path of the loaded view
 	 * @param array $pVars Associative array for specific view vars
 	 * @param Request $request The associated request which triggered the route.
 	 * @param Exception $exception Exception if error happened
 	 * @return array The prepared vars bag
 	 */
-	protected function makeViewVarsBag ( array $pVars = [], Request $request = null, Exception $exception = null )
+	protected function makeViewVarsBag ( $pViewName = '', array $pVars = [], Request $request = null, Exception $exception = null )
 	{
 		// Get config
 		$config = $this->getConfig();
@@ -117,6 +119,7 @@ trait PebbleApp_mvc
 		return [
 			'app'       => $this,
 			'silex'     => $this->getSilex(),
+			'view'      => $pViewName,
 			'config'    => $config,
 			'vars'      => $pVars,
 			'request'   => $request,
@@ -157,7 +160,7 @@ trait PebbleApp_mvc
 		$viewVars = ArrayUtils::extendsArray( $ymlFileVars, $pVars );
 
 		// Vars always have app and silex instances
-		$viewVarsBag = $this->makeViewVarsBag( $viewVars, $request, null );
+		$viewVarsBag = $this->makeViewVarsBag( $pViewName, $viewVars, $request, null );
 
 		// Render twig view with compiled vars
 		$content = $this->_silexApp['twig']->render( $pViewName.'.twig', $viewVarsBag );
