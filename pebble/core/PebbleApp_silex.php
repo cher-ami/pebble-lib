@@ -45,6 +45,7 @@ trait PebbleApp_silex
 	protected function initMiddleWares ()
 	{
 		// Before anything on silex
+		// Route aren't done yet
 		$this->_silexApp->before(function (Request $request, Application $app)
 		{
 			// Get infos from request
@@ -60,21 +61,22 @@ trait PebbleApp_silex
 				'base'      => $baseURL.'/'
 			];
 
-			// Launch initFromTile phase 2 here
+			// Launch init phase 2 here
 			$this->init2();
 
 		}, Application::EARLY_EVENT);
 
 		// Before anything on silex but JUST AFTER LOL
-		$this->_silexApp->before(function (Request $request, Application $app)
+		/*
+		$this->_silexApp->boot(function ()
 		{
 			// Get params
 			//$getParams = $request->query->all();
-
 			// FIXME : Check redirection here (mobile or anything)
 			// TODO : Créer un middleWare pratique pour la détéction mobile et autre
 			// TODO : Voir l'utilité du truc
 		});
+		*/
 	}
 
 

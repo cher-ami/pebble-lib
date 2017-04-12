@@ -82,7 +82,7 @@ trait PebbleApp_config
 		}
 		catch (ParseException $e)
 		{
-			throw new Exception("PebbleApp.loadConfig // Parse error on config gile `$pConfigName` at `$filePath`");
+			throw new Exception("PebbleApp.loadConfig // Parse error on config file `$pConfigName` at `$filePath`");
 		}
 		catch (Exception $e)
 		{
@@ -156,6 +156,35 @@ trait PebbleApp_config
 				// Process to templating with config as properties and override reference
 				$configValue = StringUtils::quickMustache($configValue, $this->_config);
 			}
+		}
+	}
+
+	/**
+	 * Setup dictionary config.
+	 * Will add currentPage property inside dictionary config.
+	 * Need route to be matched so it will work from init phase 3 only.
+	 */
+	protected function setupDictionary ()
+	{
+		// Get current matched route name
+		$routeName = $this->getCurrentRouteName();
+
+		// If dictionary exists as a config
+		// And if we have a route match
+		if ( !is_null($this->_config['dictionary']) && !empty($routeName) )
+		{
+			// Get dictionary from config - as reference -
+			$dictionary = &$this->_config['dictionary'];
+
+			// Shorcut currentPage property inside dictionary
+			$dictionary['currentPage'] = (
+				// If this page exists in dictionary
+				isset($dictionary['pages'][$routeName])
+				? $dictionary['pages'][$routeName]
+
+				// Empty array by default to avoid errors
+				: []
+			);
 		}
 	}
 }

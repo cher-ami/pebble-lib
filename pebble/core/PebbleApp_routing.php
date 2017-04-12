@@ -8,6 +8,24 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait PebbleApp_routing
 {
+	// ------------------------------------------------------------------------- PROPERTIES
+
+	/**
+	 * Current route matched with URL.
+	 * Will have properties from the matched route from routes.yml
+	 */
+	public function getCurrentRoute () { return $this->_currentRoute; }
+	protected $_currentRoute;
+
+	/**
+	 * Current route name matched with URL.
+	 * Will be the key of the matched route from routes.yml
+	 * @var string
+	 */
+	public function getCurrentRouteName () { return $this->_currentRouteName; }
+	protected $_currentRouteName;
+
+
 	// ------------------------------------------------------------------------- INIT
 
 	/**
@@ -68,7 +86,7 @@ trait PebbleApp_routing
 			// Get method from config
 			// Default is get
 			$method = (
-			isset( $routeConfig['method'] )
+				isset( $routeConfig['method'] )
 				? strtolower( $routeConfig['method'] )
 				: 'get'
 			);
@@ -105,7 +123,7 @@ trait PebbleApp_routing
 	 * Called when a route is caught.
 	 * @param Request|null $request The associated request which triggered the route.
 	 * @param string $pRouteName The route name from the routes config.
-	 * @param Exception $exception Trigerring exception.
+	 * @param Exception $exception Triggering exception.
 	 * @return mixed
 	 * @throws Exception If route not found but it should be ok..
 	 */
@@ -117,11 +135,18 @@ trait PebbleApp_routing
 		// Target route from name
 		$targetRoute = $routeList[ $pRouteName ];
 
+		// Save current route
+		$this->_currentRoute = $targetRoute;
+		$this->_currentRouteName = $pRouteName;
+
 		// Check if route exists, anyway we should never fall in this.
 		if ( !isset($targetRoute) )
 		{
 			throw new Exception("PebbleApp.routeHandler // Invalid route `$pRouteName`, not found in routes config.");
 		}
+
+		// Launch init phase 3
+		$this->init3();
 
 		// If we have an action
 		if ( isset($targetRoute['action']) && !empty($targetRoute['action']) )
@@ -130,7 +155,7 @@ trait PebbleApp_routing
 			return $this->callAction(
 				$targetRoute['action'],
 				(
-				is_null($exception)
+					is_null($exception)
 					? [ $this, $request ]
 					: [ $this, $request, $exception ]
 				)

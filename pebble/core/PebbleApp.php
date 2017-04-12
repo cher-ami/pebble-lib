@@ -188,6 +188,18 @@ class PebbleApp
 		$this->registerServices();
 	}
 
+	/**
+	 * Initialisation phase 3
+	 * We are after the route matching method.
+	 * Here we have route and page information.
+	 * - Setup dictionary for current page
+	 */
+	protected function init3 ()
+	{
+		// Setup dictionary for current page
+		$this->setupDictionary();
+	}
+
 
 	// ------------------------------------------------------------------------- TRAITS
 
