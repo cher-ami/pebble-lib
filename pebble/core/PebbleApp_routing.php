@@ -101,14 +101,14 @@ trait PebbleApp_routing
 			if ($method == 'get')
 			{
 				// Setup route
-				$this->_silexApp->get( $routeConfig['url'], $routeHandler );
+				$this->_silexApp->get( $routeConfig['url'], $routeHandler )->bind( $routeName );
 			}
 
 			// POST
 			else if ($method == 'post')
 			{
 				// Setup route
-				$this->_silexApp->post( $routeConfig['url'], $routeHandler );
+				$this->_silexApp->post( $routeConfig['url'], $routeHandler )->bind( $routeName );
 			}
 
 			// Unknown method
@@ -179,22 +179,27 @@ trait PebbleApp_routing
 
 	// ------------------------------------------------------------------------- HELPERS
 
-	// TODO : Continuer le routage inverse
-
-	public function routeToAction ($pRouteName = '')
+	/**
+	 * Will generate an URL to a route from it's name inside routes.yml
+	 * All parameters will be slugified.
+	 * @param string $pRouteName Route name declared in routes.yml. You are looking for the route key.
+	 * @param array $pParams Associative array for all parameters the route need.
+	 */
+	public function generateURL ($pRouteName = '', $pParams = [])
 	{
-		// Get route list
-		$routeList = $this->getConfig('routes');
+		// Get slugifier object
+		$slugifier = $this->_silexApp['slugify'];
 
-		// Check if route exists, anyway we should never fall in this.
-		if ( !isset($routeList[$pRouteName]) )
+		// Browse all params to slugify them
+		$slugifiedParameters = [];
+		foreach ($pParams as $key => $param)
 		{
-			throw new Exception("PebbleApp.routeToAction // Invalid route `$pRouteName`, not found in routes config.");
+			// Slugify and push into a new set of clean params
+			$slugifiedParameters[ $key ] = $slugifier->slugify( $param );
 		}
 
-		// TODO : Voir ce service : UrlGeneratorServiceProvider
-
-		throw new Exception('TODO');
+		// Map to silex url_generator with slugified params
+		return $this->_silexApp['url_generator']->generate($pRouteName, $slugifiedParameters);
 	}
 
 }
