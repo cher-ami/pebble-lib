@@ -109,21 +109,56 @@ trait PebbleApp_mvc
 	 */
 	protected function makeViewVarsBag ( $pViewName = '', array $pVars = [], Request $request = null, Exception $exception = null )
 	{
-		// Get config
+		// Get config - as a copy -
 		$config = $this->getConfig();
 
 		// Remove database informations
+		// This is a copy so controllers can still access to it
+		// TODO : Créer un système dynamique pour supprimer les données sensibles ?
 		unset( $config['database'] );
 
-		// Return bag
+		// If dictionary does not exists
+		// Map dictionary as empty array to avoid errors
+		$dictionary = (
+			isset( $config['dictionary'] )
+			? $config['dictionary']
+			: []
+		);
+
+		// Create and return bag
+		// All those vars are directly accessible from twig templates
 		return [
-			'app'       => $this,
-			'silex'     => $this->getSilex(),
-			'view'      => $pViewName,
-			'config'    => $config,
-			'vars'      => $pVars,
-			'request'   => $request,
-			'exception' => $exception
+			// Access to the PebbleApp
+			'app'           => $this,
+			'A'             => $this,
+
+			// Access to the SilexApp
+			'silex'         => $this->getSilex(),
+			'S'             => $this->getSilex(),
+
+			// Name of the current view (path to twig file)
+			'viewName'      => $pViewName,
+			'N'             => $pViewName,
+
+			// All loaded config, without sensitive data
+			'config'        => $config,
+			'C'             => $config,
+
+			// Injected vars from template var files and controllers
+			'vars'          => $pVars,
+			'V'             => $pVars,
+
+			// Direct access to dictionary
+			'dictionary'    => $dictionary,
+			'D'             => $dictionary,
+
+			// Request triggering this route
+			'request'       => $request,
+			'R'             => $request,
+
+			// Exception triggering this error
+			'exception'     => $exception,
+			'E'             => $exception,
 		];
 	}
 
