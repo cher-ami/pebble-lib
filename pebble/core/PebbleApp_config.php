@@ -160,18 +160,17 @@ trait PebbleApp_config
 	}
 
 	/**
-	 * Setup dictionary config.
+	 * Inject a route name inside dictionary currentPage node.
 	 * Will add currentPage property inside dictionary config.
 	 * Need route to be matched so it will work from init phase 3 only.
+	 * @param string $pRouteName Route name to get from dictionary.pages
+	 * @param array $pOverride Associative array injected on top of currentPage
 	 */
-	protected function setupDictionary ()
+	public function injectDictionary ($pRouteName, $pOverride = [])
 	{
-		// Get current matched route name
-		$routeName = $this->getCurrentRouteName();
-
 		// If dictionary exists as a config
 		// And if we have a route match
-		if ( !is_null($this->_config['dictionary']) && !empty($routeName) )
+		if ( !is_null($this->_config['dictionary']) && !empty($pRouteName) )
 		{
 			// Get dictionary from config - as reference -
 			$dictionary = &$this->_config['dictionary'];
@@ -179,12 +178,15 @@ trait PebbleApp_config
 			// Shorcut currentPage property inside dictionary
 			$dictionary['currentPage'] = (
 				// If this page exists in dictionary
-				isset($dictionary['pages'][$routeName])
-				? $dictionary['pages'][$routeName]
+				isset($dictionary['pages'][$pRouteName])
+				? $dictionary['pages'][$pRouteName]
 
 				// Empty array by default to avoid errors
 				: []
 			);
+
+			// Override on top of currentPage as reference
+			ArrayUtils::extendsArray($dictionary['currentPage'], $pOverride);
 		}
 	}
 }
