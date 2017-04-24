@@ -2,6 +2,7 @@
 
 namespace pebble\core;
 
+use controllers\AppController;
 use pebble\utils\ArrayUtils;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -9,6 +10,54 @@ use Symfony\Component\HttpFoundation\Response;
 
 trait PebbleApp_mvc
 {
+	// ------------------------------------------------------------------------- APP CONTROLLER
+
+	/**
+	 * @var AppController
+	 */
+	protected $_appController;
+
+	/**
+	 * Init app controller if it exists
+	 */
+	public function initAppController ()
+	{
+		// Check if our class exists
+		$controllerClassName = 'controllers\\AppController';
+
+		// If app controller class exists
+		if ( class_exists($controllerClassName) )
+		{
+			// Create instance from class name
+			$this->_appController = new $controllerClassName( $this );
+		}
+	}
+
+	/**
+	 * Will try to call a middleware on the app controller.
+	 * Will fail silently and return null if app controller does not exists
+	 * Or if middleware on app controller does not exists.
+	 * @param string $pMethodName Name of the middleware to call
+	 * @param array $pParams Params to send to the middleWare
+	 * @return mixed|null App controller middleware result if callable
+	 */
+	public function callAppControllerMiddleWare ($pMethodName, $pParams)
+	{
+		// If app controller exists
+		// And if this method exists on app controller
+		if ( !is_null($this->_appController) && method_exists($this->_appController, $pMethodName) )
+		{
+			return call_user_func_array(
+				[$this->_appController, $pMethodName],
+				$pParams
+			);
+		}
+
+		// No controller or no middleware, return null
+		else return null;
+	}
+
+
 	// ------------------------------------------------------------------------- CONTROLLERS
 
 	/**
@@ -78,6 +127,13 @@ trait PebbleApp_mvc
 
 
 	// ------------------------------------------------------------------------- VIEWS
+
+	/**
+	 * Injected vars for current view.
+	 * @var array
+	 */
+	protected $_viewVars = [];
+	public function getViewVars () { return $this->_viewVars; }
 
 	/**
 	 * Pending redirect request.
@@ -163,6 +219,15 @@ trait PebbleApp_mvc
 	}
 
 	/**
+	 * Inject vars for current view.
+	 * @param array $pVars Associative array of data, passed as reference.
+	 */
+	public function injectViewVars (&$pVars)
+	{
+		ArrayUtils::extendsArray($this->_viewVars, $pVars);
+	}
+
+	/**
 	 * Render a twig view from its path.
 	 * Path have to be like this : "viewSubFolder/pageName"
 	 * With slash between folders and no extension.
@@ -191,11 +256,17 @@ trait PebbleApp_mvc
 		// Load it (will return empty array if file not found)
 		$ymlFileVars = PebbleApp::loadYMLFile( $ymlViewFile, 0, false );
 
-		// Inject parameter vars over yml vars
-		$viewVars = ArrayUtils::extendsArray( $ymlFileVars, $pVars );
+		// Inject YML view vars
+		$this->injectViewVars( $ymlFileVars );
 
-		// Vars always have app and silex instances
-		$viewVarsBag = $this->makeViewVarsBag( $pViewName, $viewVars, $request, null );
+		// Injected view vars params
+		$this->injectViewVars( $pVars );
+
+		// Call app controller middleware
+		$this->callAppControllerMiddleWare('beforeView', [$this, $pViewName, $request]);
+
+		// Format view var bag
+		$viewVarsBag = $this->makeViewVarsBag( $pViewName, $this->_viewVars, $request, null );
 
 		// Render twig view with compiled vars
 		$content = $this->_silexApp['twig']->render( $pViewName.'.twig', $viewVarsBag );

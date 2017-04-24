@@ -148,6 +148,9 @@ trait PebbleApp_routing
 		// Launch init phase 3
 		$this->init3();
 
+		// Middle ware before action
+		$this->callAppControllerMiddleWare('beforeAction', [$this, $request, $pRouteName, $exception]);
+
 		// If we have an action
 		if ( isset($targetRoute['action']) && !empty($targetRoute['action']) )
 		{

@@ -139,7 +139,7 @@ class PebbleApp
 
 		// Record link to silex app or create one
 		$this->_silexApp = (
-			is_null($pSilexApplication)
+		is_null($pSilexApplication)
 			? new Application()
 			: $pSilexApplication
 		);
@@ -155,12 +155,16 @@ class PebbleApp
 	 * Initialisation phase 1.
 	 * Triggered just after construction.
 	 * Here Silex isn't started.
+	 * - Init app controller if available
 	 * - Loading raw configs
 	 * - Init routing from config
 	 * - Initialising Silex middleware
 	 */
 	protected function init1 ()
 	{
+		// Init app controller if available
+		$this->initAppController();
+
 		// Load application configs
 		$this->loadConfigs();
 
