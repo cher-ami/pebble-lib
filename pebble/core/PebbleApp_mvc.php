@@ -220,9 +220,9 @@ trait PebbleApp_mvc
 
 	/**
 	 * Inject vars for current view.
-	 * @param array $pVars Associative array of data, passed as reference.
+	 * @param array $pVars Associative array of data.
 	 */
-	public function injectViewVars (&$pVars)
+	public function injectViewVars ($pVars)
 	{
 		ArrayUtils::extendsArray($this->_viewVars, $pVars);
 	}
