@@ -95,7 +95,7 @@ trait PebbleApp_config
 			// Get default config
 			// If there is not default config in file, create empty array
 			$envConfigContent = (
-			isset($configObject['default'])
+				isset($configObject['default'])
 				? $configObject['default']
 				: []
 			);
@@ -106,8 +106,29 @@ trait PebbleApp_config
 			// If we have a specific env configuration
 			if (isset($configObject[ $currentEnvName ]))
 			{
-				// Append to the default one
-				ArrayUtils::extendsArray($envConfigContent, $configObject[ $currentEnvName ]);
+				// If this is a string, we are in clone mode
+				if (is_string($configObject[ $currentEnvName ]))
+				{
+					// The name of the env to clone is the value of current env
+					// A bit difficult but, in yml :
+					// production : "staging"
+					// will load "staging" properties for "production" env
+					$envToClone = $configObject[ $currentEnvName ];
+
+					// If env to clone does not exists, config is invalid
+					if (!isset($configObject[ $envToClone ]))
+					{
+						throw new Exception("PebbleApp.loadConfig // Config file `$pConfigName` not valid. Environment named `$envToClone` does not exists. Please check if this config file is valid and have environment nodes on first level.");
+					}
+
+					// Append to the default one
+					ArrayUtils::extendsArray($envConfigContent, $configObject[ $envToClone ]);
+				}
+				else
+				{
+					// Append to the default one
+					ArrayUtils::extendsArray($envConfigContent, $configObject[ $currentEnvName ]);
+				}
 			}
 
 			// Override config content with env parsed one

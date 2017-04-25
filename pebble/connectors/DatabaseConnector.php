@@ -6,6 +6,9 @@ use pebble\core\PebbleApp;
 use Exception;
 use PDO;
 
+// TODO : Faire un truc sans getInstance() ?
+// TODO : Simplifier le update, il faudrait que condition ne soit pas : "email=:email" avec le : que pour le second qui n'a aucun sens
+
 class DatabaseConnector
 {
 	// ------------------------------------------------------------------------- SINGLETON
