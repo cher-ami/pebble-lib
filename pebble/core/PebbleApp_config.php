@@ -181,13 +181,13 @@ trait PebbleApp_config
 	}
 
 	/**
-	 * Inject a route name inside dictionary currentPage node.
-	 * Will add currentPage property inside dictionary config.
-	 * Need route to be matched so it will work from init phase 3 only.
-	 * @param string $pRouteName Route name to get from dictionary.pages
-	 * @param array $pOverride Associative array injected on top of currentPage
+	 * Inject dictionary page data into dictionary "currentPage" node from page route name.
+	 * This node will be available at dictionary's first level.
+	 * Dictionary page data can be overridden.
+	 * @param string $pRouteName Route name opening the page we want to target.
+	 * @param array $pOverride (optional) override data over dictionary page data.
 	 */
-	public function injectDictionary ($pRouteName, $pOverride = [])
+	public function injectCurrentPageDictionary ($pRouteName, $pOverride = [])
 	{
 		// If dictionary exists as a config
 		// And if we have a route match
@@ -197,7 +197,7 @@ trait PebbleApp_config
 			$dictionary = &$this->_config['dictionary'];
 
 			// Shorcut currentPage property inside dictionary
-			$dictionary['currentPage'] = (
+			$currentPage = (
 				// If this page exists in dictionary
 				isset($dictionary['pages'][$pRouteName])
 				? $dictionary['pages'][$pRouteName]
@@ -208,6 +208,29 @@ trait PebbleApp_config
 
 			// Override on top of currentPage as reference
 			ArrayUtils::extendsArray($dictionary['currentPage'], $pOverride);
+
+			// Inject data into dictionary
+			$this->injectDictionary('currentPage', $currentPage);
+		}
+	}
+
+	/**
+	 * Inject data into dictionary.
+	 * Can only inject at dictionary's root.
+	 * @param string $pInjectionName Node name of the injection. Will be available at dictionary first level.
+	 * @param array $pDataToInject Data to inject as value of this node.
+	 */
+	public function injectDictionary ($pInjectionName, $pDataToInject)
+	{
+		// If dictionary exists as a config
+		// And if we have a route match
+		if ( !is_null($this->_config['dictionary']) )
+		{
+			// Get dictionary from config - as reference -
+			$dictionary = &$this->_config['dictionary'];
+
+			// Shorcut currentPage property inside dictionary
+			$dictionary[ $pInjectionName ] = $pDataToInject;
 		}
 	}
 }

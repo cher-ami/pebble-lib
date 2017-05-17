@@ -201,7 +201,7 @@ class PebbleApp
 	protected function init3 ()
 	{
 		// Setup dictionary for current page
-		$this->injectDictionary( $this->getCurrentRouteName() );
+		$this->injectCurrentPageDictionary( $this->getCurrentRouteName() );
 	}
 
 
