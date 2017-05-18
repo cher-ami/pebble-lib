@@ -139,7 +139,7 @@ class PebbleApp
 
 		// Record link to silex app or create one
 		$this->_silexApp = (
-		is_null($pSilexApplication)
+			is_null($pSilexApplication)
 			? new Application()
 			: $pSilexApplication
 		);

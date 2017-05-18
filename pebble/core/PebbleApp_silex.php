@@ -87,13 +87,6 @@ trait PebbleApp_silex
 	 */
 	protected function registerServices ()
 	{
-		// ---- ROUTING
-
-		// FIXME : Introuvable dans la nouvelle version de silex ?
-		//$this->_silexApp->register( new UrlGeneratorServiceProvider() );
-
-		// ---- TEMPLATING
-
 		// Get debug app state
 		$isDebug = $this->getConfig('app.debug');
 
@@ -107,9 +100,9 @@ trait PebbleApp_silex
 
 			// Enable twig cache if we are not in debug mode
 			'cache' => (
-			$isDebug
-				? $this->getPathTo('temp', 'cache')
-				: false
+				$isDebug
+				? false
+				: $this->getPathTo('temp', 'cache')
 			)
 		));
 
@@ -128,6 +121,9 @@ trait PebbleApp_silex
 		$this->_silexApp['twig']->addExtension(
 			new TwigHelpers( $this )
 		);
+
+		// Call middleware on appController to init custom services for app
+		$this->callAppControllerMiddleWare('registerServices', []);
 	}
 
 
