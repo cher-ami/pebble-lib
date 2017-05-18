@@ -123,7 +123,10 @@ trait PebbleApp_silex
 		);
 
 		// Call middleware on appController to init custom services for app
-		$this->callAppControllerMiddleWare('registerServices', []);
+		$this->callAppControllerMiddleWare('registerServices', [
+			$this,
+			$this->getSilex()
+		]);
 	}
 
 
