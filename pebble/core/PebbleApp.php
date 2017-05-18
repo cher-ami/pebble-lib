@@ -179,9 +179,10 @@ class PebbleApp
 	 * Initialisation phase 2
 	 * Triggered by Silex early before middleware.
 	 * We are after the run method.
-	 * Here we have the request object.
+	 * Here, we have the request object.
 	 * - Process templating on all config
 	 * - Register services
+	 * - Init custom app dependencies
 	 */
 	protected function init2 ()
 	{
@@ -190,6 +191,9 @@ class PebbleApp
 
 		// Register Silex and Symfony services
 		$this->registerServices();
+
+		// Init app dependencies through custom AppController
+		$this->callAppControllerMiddleWare('initAppDependencies', [ $this ]);
 	}
 
 	/**
