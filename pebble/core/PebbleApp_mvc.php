@@ -18,6 +18,16 @@ trait PebbleApp_mvc
 	protected $_appController;
 
 	/**
+	 * Get app controller instance.
+	 * @return AppController Can be null if AppController file does not exists.
+	 */
+	public function getAppController ()
+	{
+		return $this->_appController;
+	}
+
+
+	/**
 	 * Init app controller if it exists
 	 */
 	public function initAppController ()
