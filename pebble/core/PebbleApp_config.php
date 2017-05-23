@@ -184,6 +184,8 @@ trait PebbleApp_config
 	 * Inject dictionary page data into dictionary "currentPage" node from page route name.
 	 * This node will be available at dictionary's first level.
 	 * Dictionary page data can be overridden.
+	 * Associative array will be overridden with ArrayUtils.
+	 * @see ArrayUtils::extendsArray
 	 * @param string $pRouteName Route name opening the page we want to target.
 	 * @param array $pOverride (optional) override data over dictionary page data.
 	 */
@@ -210,17 +212,19 @@ trait PebbleApp_config
 			ArrayUtils::extendsArray($dictionary['currentPage'], $pOverride);
 
 			// Inject data into dictionary
-			$this->injectDictionary('currentPage', $currentPage);
+			$this->injectDictionary([
+				'currentPage' => $currentPage
+			]);
 		}
 	}
 
 	/**
 	 * Inject data into dictionary.
-	 * Can only inject at dictionary's root.
-	 * @param string $pInjectionName Node name of the injection. Will be available at dictionary first level.
-	 * @param array $pDataToInject Data to inject as value of this node.
+	 * Associative array will be overridden with ArrayUtils.
+	 * @see ArrayUtils::extendsArray
+	 * @param array $pDataToInject Data to override.
 	 */
-	public function injectDictionary ($pInjectionName, $pDataToInject)
+	public function injectDictionary ($pDataToInject)
 	{
 		// If dictionary exists as a config
 		// And if we have a route match
@@ -229,8 +233,8 @@ trait PebbleApp_config
 			// Get dictionary from config - as reference -
 			$dictionary = &$this->_config['dictionary'];
 
-			// Shorcut currentPage property inside dictionary
-			$dictionary[ $pInjectionName ] = $pDataToInject;
+			// Inject and override data into dictionary
+			ArrayUtils::extendsArray($dictionary, $pDataToInject);
 		}
 	}
 }
