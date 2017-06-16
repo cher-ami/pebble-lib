@@ -1,7 +1,7 @@
 {
 	"name": "cher-ami/pebble-lib",
 	"description": "Pebble is a micro-framework for custom web applications, based on Silex, Symfony components and Composer.",
-	"version" : "0.2.6",
+	"version" : "0.2.7",
 	"minimum-stability": "dev",
 	"type": "library",
 	"license": "MIT Licence",

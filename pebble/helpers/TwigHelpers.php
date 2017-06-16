@@ -34,6 +34,7 @@ class TwigHelpers extends Twig_Extension
 
 	// Load all traits
 	use TwigHelpers_asset;
+	use TwigHelpers_utils;
 
 	/**
 	 * {@inheritDoc}
@@ -42,7 +43,8 @@ class TwigHelpers extends Twig_Extension
 	{
 		// Init all loaded traits
 		return [
-			$this->init_asset()
+			$this->init_asset(),
+			$this->init_utils()
 		];
 	}
 }
