@@ -161,7 +161,7 @@ trait PebbleApp_mvc
 	 * Useful when working with middleware to know where we want to show
 	 */
 	protected $_viewName = null;
-	public function viewName () { return $this->_viewName; }
+	public function getNiewName () { return $this->_viewName; }
 
 
 	/**
