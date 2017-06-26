@@ -157,6 +157,14 @@ trait PebbleApp_mvc
 	}
 
 	/**
+	 * Last requested view path.
+	 * Useful when working with middleware to know where we want to show
+	 */
+	protected $_viewName = null;
+	public function viewName () { return $this->_viewName; }
+
+
+	/**
 	 * Create and return a vars bag for the view.
 	 * Database infos is removed from config because who need sensitive credentials in views ?
 	 * Returned structure :
@@ -280,6 +288,10 @@ trait PebbleApp_mvc
 
 		// Render twig view with compiled vars
 		$content = $this->_silexApp['twig']->render( $pViewName.'.twig', $viewVarsBag );
+
+		// Store this view path as last requested view.
+		// Useful when working with middleware to know where we want to show
+		$this->_viewName = $pViewName;
 
 		// Return response with rendered twig and headers
 		return new Response(
