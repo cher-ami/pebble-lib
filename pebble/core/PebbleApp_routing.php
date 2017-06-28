@@ -37,10 +37,12 @@ trait PebbleApp_routing
 		// Get routes from config
 		$routesList = $this->getConfig('routes');
 
-		// Register error handling
-		// FIXME : Voir pourquoi l'autocomplete pine ici alors que ça marche ?
+		// Get debug app state
+		$isDebug = $this->getConfig('app.debug');
+
+		// Listen errors
 		$this->_silexApp->error(
-			function (Exception $e, Request $request) use ($routesList)
+			function (Exception $e, Request $request, $code) use ($isDebug)
 			{
 				// Not found
 				if ($e instanceof NotFoundHttpException)
@@ -49,8 +51,11 @@ trait PebbleApp_routing
 				}
 
 				// Fatal and not debugging
-				else if ( !$this->_silexApp['debug'] )
+				else if ( !$isDebug )
 				{
+					dump('FATAL ERROR IN ROUTING');
+					dump($e->getMessage());
+					dump($code);
 					return $this->routeHandler( $request, 'fatal', $e );
 				}
 			}

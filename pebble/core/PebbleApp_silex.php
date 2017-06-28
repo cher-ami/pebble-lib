@@ -2,6 +2,8 @@
 
 namespace pebble\core;
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use pebble\helpers\TwigHelpers;
 use Cocur\Slugify\Bridge\Twig\SlugifyExtension;
 use Cocur\Slugify\Slugify;
@@ -41,12 +43,19 @@ trait PebbleApp_silex
 	/**
 	 * Init server info gathering.
 	 * Will be added in config.server
+	 * Will catch errors
 	 */
 	protected function initMiddleWares ()
 	{
+		// Target silex app
+		$silexApp = $this->_silexApp;
+
+		// Get debug app state
+		$isDebug = $this->getConfig('app.debug');
+
 		// Before anything on silex
 		// Route aren't done yet
-		$this->_silexApp->before(function (Request $request, Application $app)
+		$silexApp->before(function (Request $request, Application $app)
 		{
 			// Get infos from request
 			$urlScheme = $request->getScheme();
@@ -77,10 +86,36 @@ trait PebbleApp_silex
 			// TODO : Voir l'utilité du truc
 		});
 		*/
+
+		// If we are in production mode
+		if (!$isDebug)
+		{
+			// Catch all errors
+			//ErrorHandler::register();
+
+			// Catcher errors through silex middleware
+			$this->_silexApp->error(function ( \Exception $e, Request $request, $code ) use ($silexApp)
+			{
+				$error = "---- ".date('D j M Y @ G:i:s').' - '.$code;
+				$error .= "\n".$e->getFile().' on line '.$e->getLine();
+				$error .= "\n".$e->getCode().' > '.$e->getMessage();
+				$error .= "\n";
+
+				//$silexApp['logger']->error($error);
+				$this->_logger->addCritical($error);
+
+			}, Application::EARLY_EVENT);
+		}
 	}
 
 
 	// ------------------------------------------------------------------------- SERVICES
+
+	/**
+	 * TODO : Replacer
+	 * @var Logger
+	 */
+	protected $_logger;
 
 	/**
 	 * Register Silex services
@@ -90,13 +125,22 @@ trait PebbleApp_silex
 		// Get debug app state
 		$isDebug = $this->getConfig('app.debug');
 
+		// Target silex app
+		$silexApp = $this->_silexApp;
+
+		// Init monolog first so we can catch errors
+		$this->_logger = new Logger('pebble');
+		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'production.log'), Logger::CRITICAL));
+		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'debug.log'), Logger::DEBUG));
+		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'info.log'), Logger::INFO));
+
 		// Register twig and configure it
-		$this->_silexApp->register(new TwigServiceProvider(), array(
+		$silexApp->register(new TwigServiceProvider(), [
 			// Set path to views
 			'twig.path'			=> $this->getPathTo('view'),
-			'twig.options'		=> array(
+			'twig.options'		=> [
 				'debug' => $isDebug
-			),
+			],
 
 			// Enable twig cache if we are not in debug mode
 			'cache' => (
@@ -104,21 +148,21 @@ trait PebbleApp_silex
 				? false
 				: $this->getPathTo('temp', 'cache')
 			)
-		));
+		]);
 
 		// Activate twig debug extension if needed
-		$isDebug && $this->_silexApp['twig']->addExtension(
+		$isDebug && $silexApp['twig']->addExtension(
 			new Twig_Extension_Debug()
 		);
 
 		// Add slug extension for reverse routing
-		$this->_silexApp['slugify'] = Slugify::create();
-		$this->_silexApp['twig']->addExtension(
-			new SlugifyExtension( $this->_silexApp['slugify'] )
+		$silexApp['slugify'] = Slugify::create();
+		$silexApp['twig']->addExtension(
+			new SlugifyExtension( $silexApp['slugify'] )
 		);
 
 		// Add Pebble twig helpers
-		$this->_silexApp['twig']->addExtension(
+		$silexApp['twig']->addExtension(
 			new TwigHelpers( $this )
 		);
 

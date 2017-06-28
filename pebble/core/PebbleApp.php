@@ -51,11 +51,16 @@ class PebbleApp
 	 * @var array
 	 */
 	const PATH = [
+		// Application files
 		'config'        => 'configs/',
 		'controller'    => 'controllers/',
 		'model'         => 'models/',
 		'view'          => 'views/',
-		'temp'          => 'temp/'
+
+		// Generated files
+		'temp'          => 'temp/',
+		'cache'         => 'temp/cache/',
+		'logs'          => 'temp/logs/'
 	];
 
 	/**
