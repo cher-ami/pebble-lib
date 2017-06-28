@@ -2,6 +2,7 @@
 
 namespace pebble\core;
 
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use pebble\helpers\TwigHelpers;
@@ -15,6 +16,56 @@ use Twig_Extension_Debug;
 trait PebbleApp_silex
 {
 	// ------------------------------------------------------------------------- PROPERTIES
+
+	/**
+	 * Monolog Logger. Will log every critical application errors.
+	 * Enabled only when debug mode is disabled.
+	 * Not handled error will be caught and logged when debug mode is disabled.
+	 * Otherwise, errors will be shown on screen.
+	 * @var array
+	 */
+	protected $_loggers;
+
+	/**
+	 *
+	 * @param int $pLevel Logger level will define logger name. Please select only from Logger::%LEVEL_NAME%.
+	 * @return Logger
+	 */
+	public function getLogger ($pLevel)
+	{
+		// Convert level to lowercase name
+		$levelName = Logger::getLevelName($pLevel);
+		$levelName = strtolower( $levelName );
+
+		// If this logger already exists
+		if ( isset($this->_loggers[ $levelName ]) )
+		{
+			// Returns it
+			return $this->_loggers[ $levelName ];
+		}
+
+		// Otherwise, create a new logger
+		$logger = new Logger( $levelName );
+
+		// Configure it to record file as logger name
+		$streamHandler = new StreamHandler(PebbleApp::getPathTo('logs', $levelName.'.log'), $pLevel);
+
+		// Setup custom formatter
+		$streamHandler->setFormatter(
+			new LineFormatter(
+				"%datetime% > %level_name%\n%message%\n%context% %extra%\n\n",
+				"Y-m-d H:i:s"
+			)
+		);
+
+		// Push stream handler with custom line formatter
+		$logger->pushHandler( $streamHandler );
+
+		// Store it and return it
+		$this->_loggers[ $levelName ] = $logger;
+		return $logger;
+	}
+
 
 	/**
 	 * The associated Silex Application.
@@ -75,34 +126,22 @@ trait PebbleApp_silex
 
 		}, Application::EARLY_EVENT);
 
-		// Before anything on silex but JUST AFTER LOL
-		/*
-		$this->_silexApp->boot(function ()
-		{
-			// Get params
-			//$getParams = $request->query->all();
-			// FIXME : Check redirection here (mobile or anything)
-			// TODO : Créer un middleWare pratique pour la détéction mobile et autre
-			// TODO : Voir l'utilité du truc
-		});
-		*/
-
 		// If we are in production mode
 		if (!$isDebug)
 		{
-			// Catch all errors
-			//ErrorHandler::register();
-
 			// Catcher errors through silex middleware
 			$this->_silexApp->error(function ( \Exception $e, Request $request, $code ) use ($silexApp)
 			{
-				$error = "---- ".date('D j M Y @ G:i:s').' - '.$code;
-				$error .= "\n".$e->getFile().' on line '.$e->getLine();
-				$error .= "\n".$e->getCode().' > '.$e->getMessage();
-				$error .= "\n";
+				// Get exception file path from web root to avoid extra long logs
+				$fileName = $e->getFile();
+				$explodedFileFromWebRoot = explode(PEBBLE_WEB_ROOT, $fileName);
+				$fileName = (count($explodedFileFromWebRoot) == 2 ? $explodedFileFromWebRoot[1] : $fileName);
 
-				//$silexApp['logger']->error($error);
-				$this->_logger->addCritical($error);
+				// Get critical logger
+				$this->getLogger( Logger::CRITICAL )->critical(
+					// And add critical message from error
+					$fileName.'('.$e->getLine().') > '.$e->getCode().':'.$e->getMessage()
+				);
 
 			}, Application::EARLY_EVENT);
 		}
@@ -110,12 +149,6 @@ trait PebbleApp_silex
 
 
 	// ------------------------------------------------------------------------- SERVICES
-
-	/**
-	 * TODO : Replacer
-	 * @var Logger
-	 */
-	protected $_logger;
 
 	/**
 	 * Register Silex services
@@ -128,26 +161,15 @@ trait PebbleApp_silex
 		// Target silex app
 		$silexApp = $this->_silexApp;
 
-		// Init monolog first so we can catch errors
-		$this->_logger = new Logger('pebble');
-		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'production.log'), Logger::CRITICAL));
-		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'debug.log'), Logger::DEBUG));
-		$this->_logger->pushHandler(new StreamHandler(PebbleApp::getPathTo('logs', 'info.log'), Logger::INFO));
-
 		// Register twig and configure it
 		$silexApp->register(new TwigServiceProvider(), [
 			// Set path to views
 			'twig.path'			=> $this->getPathTo('view'),
 			'twig.options'		=> [
-				'debug' => $isDebug
-			],
-
-			// Enable twig cache if we are not in debug mode
-			'cache' => (
-				$isDebug
-				? false
-				: $this->getPathTo('temp', 'cache')
-			)
+				'debug' => $isDebug,
+				// Enable twig cache if we are not in debug mode
+				'cache' => ( $isDebug ? false : $this->getPathTo('cache') )
+			]
 		]);
 
 		// Activate twig debug extension if needed

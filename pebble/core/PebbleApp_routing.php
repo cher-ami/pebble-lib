@@ -53,9 +53,6 @@ trait PebbleApp_routing
 				// Fatal and not debugging
 				else if ( !$isDebug )
 				{
-					dump('FATAL ERROR IN ROUTING');
-					dump($e->getMessage());
-					dump($code);
 					return $this->routeHandler( $request, 'fatal', $e );
 				}
 			}
