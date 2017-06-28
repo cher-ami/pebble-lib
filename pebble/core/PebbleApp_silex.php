@@ -11,6 +11,7 @@ use Cocur\Slugify\Slugify;
 use Silex\Application;
 use Silex\Provider\TwigServiceProvider;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Twig_Extension_Debug;
 
 trait PebbleApp_silex
@@ -132,6 +133,9 @@ trait PebbleApp_silex
 			// Catcher errors through silex middleware
 			$this->_silexApp->error(function ( \Exception $e, Request $request, $code ) use ($silexApp)
 			{
+				// Do not record NotFound errors
+				if ($e instanceof NotFoundHttpException) return;
+
 				// Get exception file path from web root to avoid extra long logs
 				$fileName = $e->getFile();
 				$explodedFileFromWebRoot = explode(PEBBLE_WEB_ROOT, $fileName);
