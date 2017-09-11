@@ -85,14 +85,17 @@ trait PebbleApp_config
 				$pConfigNode[ $fileName ] = [];
 
 				// Parse this sub-folder recursively and load into this new sub-node
-				$this->browseFolderAndLoadConfigs($pFolder.'/'.$fileName.'/', $pConfigNode[ $fileName ]);
+				$this->browseFolderAndLoadConfigs(
+					$pFolder.'/'.$fileName.'/',
+					$pConfigNode[ $fileName ]
+				);
 			}
 
 			// If this is a YML or JSON file
 			else if ($fileExtension == 'yml' || $fileExtension == 'json' || $fileExtension == 'txt')
 			{
 				$this->loadConfig(
-					$pFolder.pathinfo($configFileName, PATHINFO_FILENAME),
+					$pFolder.$fileName,
 					$pConfigNode,
 					true,
 					$fileExtension
@@ -103,6 +106,14 @@ trait PebbleApp_config
 
 	/**
 	 * Load a specific config file from the config folder.
+	 * Only file name (no folders) will be used to inject into $pConfigNode.
+	 * $pConfigNode need to target good depth, $pConfigName will not be used to target that depth.
+	 *
+	 * EX :
+	 * - if $pConfigName is 'dictionary/generics'
+	 * - $pConfigNode needs to target $this->_config['dictionary']
+	 * - otherwise generics.yml props will be included into $this->_config
+	 *
 	 * @param string $pConfigName YML or JSON Config file name (no trailing slash, no extension), from config folder.
 	 * @param array $pConfigNode Config node reference where to store loaded config.
 	 * @param bool $pParseEnvs If we have to parse env first level.
@@ -111,8 +122,9 @@ trait PebbleApp_config
 	 */
 	protected function loadConfig ($pConfigName, &$pConfigNode, $pParseEnvs = true, $pFileType = 'yml')
 	{
-		// Compute file name
+		// Compute file path and name
 		$filePath = PebbleApp::getPathTo('config', $pConfigName.'.'.$pFileType);
+		$fileName = pathinfo($filePath, PATHINFO_FILENAME);
 
 		// Load config file
 		try
@@ -149,7 +161,7 @@ trait PebbleApp_config
 			// Get default config
 			// If there is not default config in file, create empty array
 			$envConfigContent = (
-				isset($configObject['default'])
+			isset($configObject['default'])
 				? $configObject['default']
 				: []
 			);
@@ -190,7 +202,7 @@ trait PebbleApp_config
 		}
 
 		// Record config content from its name
-		$pConfigNode[ $pConfigName ] = $configObject;
+		$pConfigNode[ $fileName ] = $configObject;
 	}
 
 
