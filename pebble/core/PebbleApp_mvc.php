@@ -272,7 +272,7 @@ trait PebbleApp_mvc
 		);
 
 		// Load it (will return empty array if file not found)
-		$ymlFileVars = PebbleApp::loadYMLFile( $ymlViewFile, 0, false );
+		$ymlFileVars = PebbleApp::loadConfigFile( $ymlViewFile, 0, false );
 
 		// Inject YML view vars
 		$this->injectViewVars( $ymlFileVars );

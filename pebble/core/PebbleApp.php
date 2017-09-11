@@ -87,16 +87,22 @@ class PebbleApp
 	// ------------------------------------------------------------------------- YML HELPER
 
 	/**
-	 * Load and parse a YML file.
+	 * Load and parse a config file.
+	 * Can be YML file or JSON file.
+	 *
+	 * To load a JSON file, set $pFlags at -1.
+	 *
+	 * To load a TXT file, set $pFlags at -2.
+	 *
 	 * Parsed file content will be returned as an array.
 	 * @param string $pFilePath Full path to the file. @use PebbleApp::getPathTo to compute path.
-	 * @param int $pFlags Parsing flags, @see Yaml class constants
+	 * @param int $pFlags Parsing flags, @see Yaml class constants. -1 to load a JSON.
 	 * @param bool $pCheckFileExists If true, will throw Exception if file not found. If false and file not found, will return an empty array.
 	 * @return mixed Parsed data from yml file as array
 	 * @throws Exception If file not found and $pCheckFileExists is true.
 	 * @throws ParseException from Yaml::parse method.
 	 */
-	static function loadYMLFile ($pFilePath, $pFlags = 0, $pCheckFileExists = true)
+	static function loadConfigFile ($pFilePath, $pFlags = 0, $pCheckFileExists = true)
 	{
 		// Throw an exception if this file does not exists
 		if ( !file_exists($pFilePath) )
@@ -104,7 +110,7 @@ class PebbleApp
 			// If we have to check if the file exists, we throw the error
 			if ($pCheckFileExists)
 			{
-				throw new Exception("PebbleApp::loadYMLFile // Fil `$pFilePath` not found or not readable.");
+				throw new Exception("PebbleApp::loadConfigFile // File `$pFilePath` not found or not readable.");
 			}
 
 			// Else we just return a void array
@@ -114,8 +120,24 @@ class PebbleApp
 		// Load file content as string
 		$configContent = file_get_contents( $pFilePath );
 
-		// Parse YML file
-		$parsedContent = Yaml::parse( $configContent, $pFlags );
+		// Parse JSON file
+		if ($pFlags == -1)
+		{
+			// BETTER : Configurable flags
+			$parsedContent = json_decode( $configContent, true );
+		}
+
+		// TXT File
+		else if ($pFlags == -2)
+		{
+			$parsedContent = $configContent;
+		}
+
+		// YML File
+		else
+		{
+			$parsedContent = Yaml::parse( $configContent, $pFlags );
+		}
 
 		// Return parsed content and return empty array if no data to avoid apocalypse
 		return is_null($parsedContent) ? [] : $parsedContent;

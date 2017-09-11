@@ -45,20 +45,57 @@ trait PebbleApp_config
 	protected function loadConfigs ()
 	{
 		// First of all, load app config to get env etc
-		$this->loadConfig('app', false);
+		$this->loadConfig('app', $this->_config, false);
 
 		// Set debug mode from config on silex app
 		$this->_silexApp['debug'] = $this->_config['app']['debug'];
 
+		// Browser and load all configs recursively from configs folder
+		$this->browseFolderAndLoadConfigs(
+			'',
+			$this->_config
+		);
+	}
+
+	/**
+	 * Browse a config folder and load every config file found.
+	 * Config file type are YML / JSON / TXT.
+	 * Will store parsed data info $pConfigNode as reference.
+	 * Runs recursively with folders.
+	 * @param string $pFolder Folder path to browse from config folder.
+	 * @param array $pConfigNode Reference of the config array where parsed configs will be pushed.
+	 */
+	protected function browseFolderAndLoadConfigs ($pFolder, &$pConfigNode)
+	{
 		// Browse config folder
-		$configFolder = scandir( PebbleApp::getPathTo('config') );
+		$configFolder = scandir( PebbleApp::getPathTo('config').$pFolder );
 		foreach ($configFolder as $configFileName)
 		{
-			// Do not load app twice and load only yml files
-			if ($configFileName != 'app.yml' && pathinfo($configFileName, PATHINFO_EXTENSION) == 'yml')
+			// Do not load app twice, its loaded in $this->loadConfigs()
+			if ($configFileName == 'app.yml') continue;
+
+			// Get file name and extension
+			$fileExtension = pathinfo($configFileName, PATHINFO_EXTENSION);
+			$fileName = pathinfo($configFileName, PATHINFO_FILENAME);
+
+			// If this is a sub-folder
+			if ($fileExtension == '' && $fileName != '' && $fileName != '.')
+			{
+				// Create the sub-node from the directory name
+				$pConfigNode[ $fileName ] = [];
+
+				// Parse this sub-folder recursively and load into this new sub-node
+				$this->browseFolderAndLoadConfigs($pFolder.'/'.$fileName.'/', $pConfigNode[ $fileName ]);
+			}
+
+			// If this is a YML or JSON file
+			else if ($fileExtension == 'yml' || $fileExtension == 'json' || $fileExtension == 'txt')
 			{
 				$this->loadConfig(
-					pathinfo($configFileName, PATHINFO_FILENAME)
+					$pFolder.pathinfo($configFileName, PATHINFO_FILENAME),
+					$pConfigNode,
+					true,
+					$fileExtension
 				);
 			}
 		}
@@ -66,19 +103,36 @@ trait PebbleApp_config
 
 	/**
 	 * Load a specific config file from the config folder.
-	 * @param string $pConfigName YML Config file name (no slash, no extension)
+	 * @param string $pConfigName YML or JSON Config file name (no trailing slash, no extension), from config folder.
+	 * @param array $pConfigNode Config node reference where to store loaded config.
 	 * @param bool $pParseEnvs If we have to parse env first level.
+	 * @param string $pFileType 'yml' to load a yml file. 'json' to load a json file.
 	 * @throws Exception
 	 */
-	protected function loadConfig ($pConfigName, $pParseEnvs = true)
+	protected function loadConfig ($pConfigName, &$pConfigNode, $pParseEnvs = true, $pFileType = 'yml')
 	{
 		// Compute file name
-		$filePath = PebbleApp::getPathTo('config', $pConfigName.'.yml');
+		$filePath = PebbleApp::getPathTo('config', $pConfigName.'.'.$pFileType);
 
-		// Load YML file
+		// Load config file
 		try
 		{
-			$configObject = self::loadYMLFile( $filePath );
+			if ($pFileType == 'yml')
+			{
+				$configObject = self::loadConfigFile( $filePath, 0 );
+			}
+			else if ($pFileType == 'json')
+			{
+				$configObject = self::loadConfigFile( $filePath, -1 );
+			}
+			else if ($pFileType == 'txt')
+			{
+				$configObject = self::loadConfigFile( $filePath, -2 );
+			}
+			else
+			{
+				throw new Exception("PebbleApp.loadConfig // Invalid config file type `$pFileType`.");
+			}
 		}
 		catch (ParseException $e)
 		{
@@ -136,7 +190,7 @@ trait PebbleApp_config
 		}
 
 		// Record config content from its name
-		$this->_config[ $pConfigName ] = $configObject;
+		$pConfigNode[ $pConfigName ] = $configObject;
 	}
 
 
