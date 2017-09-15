@@ -67,11 +67,14 @@ class DatabaseConnector
 			$pConfigParams = PebbleApp::getInstance()->getConfig('database');
 		}
 
+		// Port command to append if we have a port parameter inside config
+		$port = (isset($pConfigParams['port']) ? ';port='.$pConfigParams['port'] : '');
+
 		// Catch error to avoid credentials to be shown in debug message
 		try
 		{
 			// Connect to database
-			$this->_connection = new PDO('mysql:host='.$pConfigParams['host'].';charset=utf8mb4', $pConfigParams['user'], $pConfigParams['password']);
+			$this->_connection = new PDO('mysql:host='.$pConfigParams['host'].$port.';charset=utf8mb4', $pConfigParams['user'], $pConfigParams['password']);
 			$this->_connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		}
