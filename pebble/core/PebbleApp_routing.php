@@ -151,7 +151,16 @@ trait PebbleApp_routing
 		$this->init3();
 
 		// Middle ware before action
-		$this->callAppControllerMiddleWare('beforeAction', [$this, $request, $pRouteName, $exception]);
+		$beforeActionReturn = $this->callAppControllerMiddleWare('beforeAction', [$this, $request, $pRouteName, $exception]);
+
+		// If middle ware is returning something
+		if ($beforeActionReturn != null)
+		{
+			// Interrupt and forward
+			// This is useful to be able to prevent controller to load
+			// For example redirect to home for restricted area
+			return $beforeActionReturn;
+		}
 
 		// If we have an action
 		if ( isset($targetRoute['action']) && !empty($targetRoute['action']) )
